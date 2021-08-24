@@ -18,8 +18,7 @@ GRID 将地球低轨道(500-600 km)运行的若干个立方星(CubeSats)组成�
 
 闪烁探测器的结构如下图所示. 探测器使用晶体闪烁体(掺$\small \rm Ce\ Gd_3(Al,Ga)_5 O_{12}$, GAGG)和SiPMs来探测$\gamma$射线. 其中$\gamma$射线使闪烁体发出闪烁光子, SiPMs 利用光电效应将闪烁光子变为电子并进行倍增, 经由前置放大器输出电子学信号. ESR为增强镜面反射镜(enhanced specular reflector), 作为$\gamma$射线入射到闪烁体的窗口和闪烁体的反射层.
 
-<img src="./detector2.png" style="zoom:35%;" />
-
+<img src="./detector2.png" style="zoom:25%"/>
 
 ### Gamma 在探测器中的信号生成过程
 
@@ -84,11 +83,48 @@ $$
 
 
 
-#### `srv/srv_[num1]_[num2].csv`
+#### `source.h5`
 
-$\gamma$​光子计数率, 分为100个能道, `[num1]`和`[num2]`表示能量范围为`[num1]~[num2]`(keV). 文件中第1列为时间(s), 第2列为计数率(count/s). 例如, 能道14.4\~15.3keV的光变曲线可以从文件`srv_1.44e+01_1.53e+01.csv`中读出.
+该文件中有3个表格:
 
-<img src="example_curve.png" style="zoom:50%;" />
+- "Energy": 100个能道的上下边界值(长度为101), 单位为 keV.
+
+    |     | Energy  |
+    | -   | ------- |
+    | 0   | 4.52515 |
+    | 1   | 4.80936 |
+    | 2   | 5.11141 |
+    | $\vdots$ | $\vdots$ |
+    | 19  | 14.3966 |
+    | 20  | 15.3007 |
+    | $\vdots$ | $\vdots$ |
+    | 99 | 1881.81 |
+    | 100 | 2000.00 |
+
+- "Time": 光变曲线(Gamma 光子计数率 vs 时间) 的时间轴(长度为625), 单位为 s. 本文件中所有光变曲线的时间轴相同.
+
+    |     | Time  |
+    | -   | ------- |
+    | 0   | 10.0324 |
+    | 1   | 10.0964 |
+    | 2   | 10.1604 |
+    | $\vdots$ | $\vdots$ |
+    | 623 | 49.9044 |
+    | 624 | 49.9684 |
+    
+- "Rate": 光变曲线的计数率(size: 100x625), 单位为 count/s. 每一行代表一个能道的光变曲线, 能道编号`i`与 "Energy" 中的能量边界值编号 `i`和`i+1` 对应.
+
+    |          |   $t_1$  |   $t_2$  |   $t_3$  | $\cdots$ |$t_{624}$ | $t_{625}$  |
+    | -        | -------  | -------  | -------  | -------  |- | -------  |
+    | 0        | 0  | 0  | 0  | $\cdots$ | 15.7108  | 0 | 
+    | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\ddots$ | $\vdots$ | $\vdots$ |
+    | 19       | 47.1033  | 47.0907  | 47.1190  | $\cdots$ |31.4216 | 62.75  |
+    | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\ddots$ |$\vdots$ | $\vdots$ |
+    | 99       | 172.712  | 125.575  | 157.063  | $\cdots$ | 157.108 | 94.125  |
+
+    例如, 能道14.4\~15.3keV的光变曲线在"Energy"中的编号为19和20, 对应在 "Rate" 中的行号为19, 其曲线如下图所示:
+
+<img src="example_curve.png" style="zoom:50%" />
 
 #### `matrix/Cube[num1]_[num2].rsp`
 
@@ -174,14 +210,14 @@ FITS_rec([(  1,    4.       ,    4.1262436),
 
 | 任务（程序名）             | 分数 |
 | ----------------------- | ---- |
-| `energy_spectrum.py`    | 25   |
+| `energy_spectrum.py`    | 20   |
 | `source_generate.py`    | 15   |
 | `calculate_response.py` | 30   |
-| `plot_signal.py`        | 10   |
+| `plot_signal.py`        | 15   |
 
 #### `energy_spectrum.py`
 
-根据 `srv/srv_[num1]_[num2].csv` 中的数据, 作出$\gamma$光子的能谱, 横轴为能量(keV), 纵轴为单位能量的计数率(count/s-keV). 将结果保存为`sepctrum.png`.
+根据 `source.h5` 中的数据, 作出$\gamma$光子的能谱, 横轴为能量(keV), 纵轴为单位能量的计数率(count/s-keV). 将结果保存为`sepctrum.png`.
 
 
 #### `source_generate.py`
@@ -189,36 +225,31 @@ FITS_rec([(  1,    4.       ,    4.1262436),
 将$\gamma$光子和本底计数率相加, 得到进入探测器的伽马射线的光变曲线(计数率 versus 时间).
 假设每个能道的X射线本底均匀, 对任意时刻的计数率服从分布$N(\mu, \sigma^2)$.
 
-输出结果为光变曲线`light_curve.png`和数据表格`light_curve_[num1]_[num2].csv`.
+输出结果为光变曲线`light_curve.png`和数据文件`light_curve.h5`(格式与 `source.h5` 相同).
 其中`light_curve.png` 中需要绘制出能量范围0\~100keV, 100\~200keV和200\~300keV内的光变曲线, 并在图例中标注能量范围.
-在`light_curve_[num1]_[num2].csv` 中第1列为时间, 第2列为计数率, `[num1]`和`[num2]`表示 channel 能量范围. 计数率和时间的单位分别为(count/s)和(s).
 
-将`light_curve_[num1]_[num2].csv`保存到`lightcurve_output`文件夹中(使用`os`模块).
 
 ####  `calculate_response.py`
 
 伽马暴源的位置距离地球很远, 因此可将$\gamma$射线视为从源方向平行到达地球.
 根据 `constant.json` 中的位置信息和探测器响应`Cube[num1]_[num2].rsp`, 
-以及上一步得到的`light_curve_[num1]_[num2].csv`, 求出在三个立方星上的响应能谱.
-(注意需要根据Gamma源和卫星位置判断是否能够接收到信号, 以及信号之间可能的时序关系).
-这里可以用`energy_spectrum.py`中的方法得到给定时间内的总原始能谱, 将其作为输入得到响应能谱.
-将结果保存在`cubesat_response/cubesat[num1]_[num2].csv`中 (`[num1]`为1\~3, 与三个立方星编号对应; `[num2]`取值范围0\~3, 对应每个探测器上的四块闪烁晶体).
+以及上一步得到的`light_curve.h5`, 求出在三个立方星上晶体的响应能谱.
+注意需要根据Gamma源和卫星位置判断是否能够接收到信号(仅考虑地球的遮挡), 以及信号的时序关系. 
+将该段时间内的总响应能谱保存到`energy_response.h5`中, 并在报告中详细说明该H5文件中的数据组织结构.
 
-#### `plot_signal.py` 
+#### `plot_signal.py`
 
-根据上一步处理的结果`cubesat[num1]_[num2].csv`, 在同一个`png`文件中绘制出三个立方星探测器上的响应曲线, 保存为`all_response.png`. 注意在图中标注必要的信息.
+根据上一步的响应计算结果, 在同一张图中绘制出探测器响应能谱随时间的变化, 使用 GIF 动画展示, 输出文件保存为 `energy_response.gif`. 注意在图中注明必要的信息.
+
 
 ### 提高要求
 
 提高要求为加分项，至多可加 10 分. 你可以自由发挥, 例如:
 
-1. 探测器响应能谱随时间的变化, 使用 GIF 动画展示
-2. 给出任意位置立方星对该伽玛源的(粗略)响应
-3. 从探测器基本原理出发, 提出计算探测器响应的其他模型, 并予以必要推导和代码实现
+1. 给出具有某一姿态(四元数)的立方星对某一天球方位Gamma源的响应矩阵
+2. 从探测器基本原理出发, 提出计算探测器响应的其他模型, 并予以必要推导和代码实现
 
-提高部分的内容不仅仅局限于以上内容, 你可以对某个具体的物理过程自由发挥.
-如果你实现了任何提高要求, 请在实验报告中详细说明你的工作,
-这将作为评分的依据.
+提高部分的内容不仅仅局限于以上内容, 你可以对某个具体的物理过程自由发挥. 如果你实现了任何提高要求, 请在实验报告中详细说明你的工作, 这将作为评分的依据.
 
 
 ## 作业要求(非功能部分)
@@ -231,3 +262,4 @@ FITS_rec([(  1,    4.       ,    4.1262436),
 1. Wikipedia contributors. "Gamma-ray burst." Wikipedia, The Free Encyclopedia. Wikipedia, The Free Encyclopedia, 5 Jul. 2021. Web. 31 Jul. 2021. 
 2. Jiaxing Wen, Xiangyun Long, Xutao Zheng, Yu An, Zhengyang Cai, Jirong Cang, Yuepeng Che,Changyu Chen, Liangjun Chen, Qianjun Chen, and et al. Grid: a student project to monitor the transient gamma-ray sky in the multimessenger astronomy era. *Experimental Astronomy*, 48(1):77–95, Aug 2019.
 3. 陈伯显. 核辐射物理及探测学[M]. 哈尔滨: 哈尔滨工程大学, 2011.
+
