@@ -6,7 +6,7 @@
 
 > 本次大作业设计基于"天格计划"的相关内容, 模拟伽马射线在探测器产生的能谱分布
 
-![](./tglogo.jpg)
+![](figures/tglogo.jpg)
 
 ### 伽马射线暴
 
@@ -18,7 +18,7 @@ GRID 将地球低轨道(500-600 km)运行的若干个立方星(CubeSats)组成�
 
 闪烁探测器的结构如下图所示. 探测器使用晶体闪烁体(掺$\small \rm Ce\ Gd_3(Al,Ga)_5 O_{12}$, GAGG)和SiPMs来探测$\gamma$射线. 其中$\gamma$射线使闪烁体发出闪烁光子, SiPMs 利用光电效应将闪烁光子变为电子并进行倍增, 经由前置放大器输出电子学信号. ESR为增强镜面反射镜(enhanced specular reflector), 作为$\gamma$射线入射到闪烁体的窗口和闪烁体的反射层.
 
-<img src="./detector2.png" style="zoom:25%"/>
+<img src="figures/detector2.png" style="zoom:25%"/>
 
 ### Gamma 在探测器中的信号生成过程
 
@@ -124,7 +124,7 @@ $$
 
     例如, 能道14.4\~15.3keV的光变曲线在"Energy"中的编号为19和20, 对应在 "Rate" 中的行号为19, 其曲线如下图所示:
 
-<img src="example_curve.png" style="zoom:50%" />
+<img src="figures/example_curve.png" style="zoom:50%" />
 
 #### `matrix/Cube[num1]_[num2].rsp`
 
